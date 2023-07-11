@@ -12,7 +12,7 @@
         </File>
     </Appenders>
     <Loggers>
-        <Logger name="com.maesquiv" level="debug" additivity="false">
+        <Logger name="com.example" level="debug" additivity="false">
             <AppenderRef ref="file"/>
         </Logger>
         <Root level="info">
