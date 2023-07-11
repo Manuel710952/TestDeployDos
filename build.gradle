@@ -1,0 +1,58 @@
+plugins {
+	id 'java'
+	id 'application'
+	id 'war'
+}
+
+group = 'com.maesquiv.servlet'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+	implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+	implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
+	// https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2'
+
+}
+
+task generateConfigProperties {
+    def environment = project.findProperty('env') ?: 'dev' // Valor predeterminado: dev
+    def propertiesFile = "src/main/resources/${environment}-config.properties"
+    
+    def configFileContent = new StringBuilder()
+    
+    file(propertiesFile).withReader { reader ->
+        configFileContent << reader.text
+    }
+    
+    def configPropertiesFile = file("src/main/resources/config.properties")
+    configPropertiesFile.text = configFileContent.toString()
+    
+    println "Archivo config.properties generado para el ambiente: $environment"
+}
+
+
+task buildWar(type: War, dependsOn: generateConfigProperties) {
+	def environment = project.hasProperty('env') ? project.env : 'dev'
+	print("El ambiente es::" + environment)
+    
+	from('src/main/webapp')
+	webInf {
+		from('src/main/webapp/WEB-INF') {
+			include '**/*.xml'
+			include '**/*.properties'
+		}
+	}
+	archiveFileName = "${project.name}.war"
+	destinationDirectory = file("build/dist")
+	classpath = sourceSets.main.runtimeClasspath
+	duplicatesStrategy = 'EXCLUDE'
+}
+
